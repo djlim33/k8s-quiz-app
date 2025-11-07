@@ -16,9 +16,8 @@ class CkaRepository {
   CkaRepository()
       : _isMockMode = dotenv.env['APP_MODE'] == 'mock',
         _model = dotenv.env['APP_MODE'] != 'mock'
-            ? GenerativeModel(
-                // 'gemini-1.5-flash'는 빠르고 비용 효율적인 최신 모델입니다.
-                model: 'gemini-1.5-flash',
+            ? GenerativeModel( // 'gemini-pro'는 가장 안정적이고 널리 지원되는 표준 모델입니다.
+                model: 'gemini-2.5-flash',
                 apiKey: dotenv.env['GEMINI_API_KEY']!,
                 // 안전 설정을 조정하여 부적절한 콘텐츠 생성을 방지합니다.
                 safetySettings: [
@@ -103,41 +102,58 @@ class CkaRepository {
       You are a CKA (Certified Kubernetes Administrator) exam simulator.
       Generate ${settings.questionCount} questions for the following topics: ${settings.topicIds.join(', ')}.
       The quiz type should be: ${settings.quizType}.
-      The response MUST be a valid JSON list of objects. Do not include any text outside of the JSON list.
-      Each object in the JSON list must strictly follow this format:
+      The response MUST be a valid JSON list of objects. Do not include any text outside of the JSON list. 
+      Each object in the JSON list must strictly follow this format, including Korean translations for 'task' and 'explanation':
       [
         {
           "id": "A unique identifier for the question",
           "topicId": "The topic id from the request, e.g., 'pods'",
           "context": "The context for the question, e.g., 'kubectl config use-context k8s-cluster-1'",
-          "task": "The specific task for the user to complete.",
+          "task": "The specific task for the user to complete in English.",
+          "task_ko": "The specific task for the user to complete in Korean.",
           "solutionCommands": ["An array of strings with the imperative command(s) to solve the task."],
           "solutionYaml": "A string containing the full declarative YAML solution. Use '\\n' for newlines.",
-          "explanation": "A detailed explanation of the solution and related concepts."
+          "explanation": "A detailed explanation of the solution and related concepts in English.",
+          "explanation_ko": "A detailed explanation of the solution and related concepts in Korean."
         }
       ]
     """;
-    
-    // 2. Gemini API 호출
-    final content = [Content.text(prompt)];
-    // _model이 null이 아님을 보장 (live 모드이므로)
-    final response = await _model!.generateContent(content);
 
-    // 3. 응답 텍스트에서 JSON 부분만 추출
-    // Gemini가 응답에 ```json ... ``` 같은 마크다운을 포함할 수 있으므로, 순수 JSON만 파싱합니다.
-    final responseText = response.text ?? '';
-    final jsonRegex = RegExp(r'```json\s*([\s\S]*?)\s*```|([\s\S]*)');
-    final match = jsonRegex.firstMatch(responseText);
-    final jsonString = (match?.group(1) ?? match?.group(2) ?? '').trim();
+    try {
+      // 2. Gemini API 호출
+      final content = [Content.text(prompt)];
+      // _model이 null이 아님을 보장 (live 모드이므로)
+      final response = await _model!.generateContent(content);
 
-    if (jsonString.isEmpty) {
-      throw Exception('Failed to parse JSON from Gemini response.');
+      // 3. 응답 텍스트에서 JSON 부분만 추출
+      // Gemini가 응답에 ```json ... ``` 같은 마크다운을 포함할 수 있으므로, 순수 JSON만 파싱합니다.
+      final responseText = response.text ?? '';
+      final jsonRegex = RegExp(r'```json\s*([\s\S]*?)\s*```|([\s\S]*)');
+      final match = jsonRegex.firstMatch(responseText);
+      final jsonString = (match?.group(1) ?? match?.group(2) ?? '').trim();
+
+      if (jsonString.isEmpty) {
+        throw Exception('Failed to parse JSON from Gemini response. Response was empty or invalid.');
+      }
+
+      // 4. JSON 파싱 및 객체 변환
+      final List<dynamic> jsonList = jsonDecode(jsonString);
+      final questions = jsonList.map((json) => CkaQuestion.fromJson(json)).toList();
+      return questions;
+    } on GenerativeAIException catch (e) {
+      // API 키, 권한, 모델 이름 등 API 관련 특정 오류를 잡습니다.
+      print('--- [GEMINI API EXCEPTION] ---');
+      print('A specific API error occurred: ${e.message}');
+      print('------------------------------');
+      // UI에서 에러 메시지를 표시할 수 있도록 예외를 다시 던집니다.
+      rethrow;
+    } on Exception catch (e) {
+      // 네트워크, JSON 파싱 등 일반적인 예외를 잡습니다.
+      print('--- [GEMINI GENERAL ERROR] ---');
+      print('An error occurred while generating the quiz: $e');
+      print('------------------------------');
+      rethrow;
     }
-
-    // 4. JSON 파싱 및 객체 변환
-    final List<dynamic> jsonList = jsonDecode(jsonString);
-    final questions = jsonList.map((json) => CkaQuestion.fromJson(json)).toList();
-    return questions;
   }
 
   // Mock 모드: 하드코딩된 Mock 데이터를 반환
@@ -149,19 +165,23 @@ class CkaRepository {
         "id": "q-mock-123",
         "topicId": "pods",
         "context": "kubectl config use-context mock-cluster",
-        "task": "[MOCK] Create a new Pod named 'mock-pod' using the 'busybox' image. This is a test question.",
+        "task": "[MOCK] Create a new Pod named 'mock-pod' using the 'busybox' image.",
+        "task_ko": "[MOCK] 'busybox' 이미지를 사용하여 'mock-pod'라는 새 파드를 생성하세요.",
         "solutionCommands": ["kubectl run mock-pod --image=busybox"],
         "solutionYaml": "apiVersion: v1\\nkind: Pod\\nmetadata:\\n  name: mock-pod\\nspec:\\n  containers:\\n  - name: busybox\\n    image: busybox",
-        "explanation": "This is a mock question for testing purposes. The `kubectl run` command is used to quickly create a pod."
+        "explanation": "This is a mock question for testing purposes. The `kubectl run` command is used to quickly create a pod.",
+        "explanation_ko": "이것은 테스트 목적의 모의 문제입니다. `kubectl run` 명령어는 파드를 빠르게 생성할 때 사용됩니다."
       },
       {
         "id": "q-mock-456",
         "topicId": "services",
         "context": "kubectl config use-context mock-cluster",
         "task": "[MOCK] Expose the deployment 'mock-deploy' as a NodePort service on port 80.",
+        "task_ko": "[MOCK] 'mock-deploy' 디플로이먼트를 80번 포트의 NodePort 서비스로 노출하세요.",
         "solutionCommands": ["kubectl expose deployment mock-deploy --type=NodePort --port=80"],
         "solutionYaml": "apiVersion: v1\\nkind: Service\\n...",
-        "explanation": "This is another mock question. Use `kubectl expose` to create a service from a deployment."
+        "explanation": "This is another mock question. Use `kubectl expose` to create a service from a deployment.",
+        "explanation_ko": "이것은 또 다른 모의 문제입니다. `kubectl expose`를 사용하여 디플로이먼트로부터 서비스를 생성할 수 있습니다."
       }
     ]
     ''';
