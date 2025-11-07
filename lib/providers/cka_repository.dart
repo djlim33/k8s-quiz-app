@@ -2,12 +2,29 @@
 
 import 'dart:convert'; // [오류 수정] dart.convert -> dart:convert
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../models/cka_data.dart'; 
 import '../models/cka_question.dart';
 
-// 1. 가짜 데이터를 제공하는 Mock Repository 클래스
-class MockCkaRepository {
-  
+// 1. Gemini API와 통신하는 실제 Repository 클래스
+class CkaRepository {
+  final GenerativeModel? _model;
+  final bool _isMockMode;
+
+  // 생성자에서 API 키를 사용하여 Gemini 모델을 초기화합니다.
+  CkaRepository()
+      : _isMockMode = dotenv.env['APP_MODE'] == 'mock',
+        _model = dotenv.env['APP_MODE'] != 'mock'
+            ? GenerativeModel(
+                // 'gemini-1.5-flash'는 빠르고 비용 효율적인 최신 모델입니다.
+                model: 'gemini-1.5-flash',
+                apiKey: dotenv.env['GEMINI_API_KEY']!,
+                // 안전 설정을 조정하여 부적절한 콘텐츠 생성을 방지합니다.
+                safetySettings: [
+                    SafetySetting(HarmCategory.harassment, HarmBlockThreshold.none)
+                  ])
+            : null;
   // --- [오류 수정] 기존 메서드 본체 복원 ---
   Future<OverallProgress> getOverallProgress() async {
     // 1초 지연 (네트워크 호출 시뮬레이션)
@@ -67,71 +84,95 @@ class MockCkaRepository {
     ];
   }
 
-  // 💥 Gemini API 호출 시뮬레이션 💥
+  // 💥 실제 Gemini API 호출 💥
   Future<List<CkaQuestion>> generateQuiz(QuizSetupSettings settings) async {
-    // 1. Gemini에게 보낼 프롬프트 생성 (시뮬레이션)
+    // APP_MODE에 따라 분기
+    if (_isMockMode) {
+      print("--- [Running in MOCK mode] ---");
+      return _generateMockQuiz(settings);
+    } else {
+      print("--- [Running in LIVE mode] ---");
+      return _generateLiveQuiz(settings);
+    }
+  }
+
+  // Live 모드: Gemini API를 호출하여 퀴즈 생성
+  Future<List<CkaQuestion>> _generateLiveQuiz(QuizSetupSettings settings) async {
+    // 1. Gemini에게 보낼 프롬프트 생성
     final prompt = """
       You are a CKA (Certified Kubernetes Administrator) exam simulator.
       Generate ${settings.questionCount} questions for the following topics: ${settings.topicIds.join(', ')}.
       The quiz type should be: ${settings.quizType}.
-      Respond ONLY with a JSON list, matching this format:
+      The response MUST be a valid JSON list of objects. Do not include any text outside of the JSON list.
+      Each object in the JSON list must strictly follow this format:
       [
         {
-          "id": "q1",
-          "topicId": "pods",
-          "context": "kubectl config use-context cluster-1",
-          "task": "Create a new Pod named 'nginx-pod' using the 'nginx:1.21' image.",
-          "solutionCommands": ["kubectl run nginx-pod --image=nginx:1.21"],
-          "solutionYaml": "apiVersion: v1\\nkind: Pod\\n...",
-          "explanation": "kubectl run is the fastest way to create a pod..."
-        },
-        ...
+          "id": "A unique identifier for the question",
+          "topicId": "The topic id from the request, e.g., 'pods'",
+          "context": "The context for the question, e.g., 'kubectl config use-context k8s-cluster-1'",
+          "task": "The specific task for the user to complete.",
+          "solutionCommands": ["An array of strings with the imperative command(s) to solve the task."],
+          "solutionYaml": "A string containing the full declarative YAML solution. Use '\\n' for newlines.",
+          "explanation": "A detailed explanation of the solution and related concepts."
+        }
       ]
     """;
     
-    print("--- [Gemini 프롬프트 (시뮬레이션)] ---");
-    print(prompt);
-    print("----------------------------------");
+    // 2. Gemini API 호출
+    final content = [Content.text(prompt)];
+    // _model이 null이 아님을 보장 (live 모드이므로)
+    final response = await _model!.generateContent(content);
 
-    // 2. Gemini API 응답 대기 (시뮬레이션)
-    await Future.delayed(const Duration(seconds: 2)); // 2초 딜레이
+    // 3. 응답 텍스트에서 JSON 부분만 추출
+    // Gemini가 응답에 ```json ... ``` 같은 마크다운을 포함할 수 있으므로, 순수 JSON만 파싱합니다.
+    final responseText = response.text ?? '';
+    final jsonRegex = RegExp(r'```json\s*([\s\S]*?)\s*```|([\s\S]*)');
+    final match = jsonRegex.firstMatch(responseText);
+    final jsonString = (match?.group(1) ?? match?.group(2) ?? '').trim();
 
-    // 3. Gemini가 반환한 JSON 응답 (시뮬레이션)
+    if (jsonString.isEmpty) {
+      throw Exception('Failed to parse JSON from Gemini response.');
+    }
+
+    // 4. JSON 파싱 및 객체 변환
+    final List<dynamic> jsonList = jsonDecode(jsonString);
+    final questions = jsonList.map((json) => CkaQuestion.fromJson(json)).toList();
+    return questions;
+  }
+
+  // Mock 모드: 하드코딩된 Mock 데이터를 반환
+  Future<List<CkaQuestion>> _generateMockQuiz(QuizSetupSettings settings) async {
+    await Future.delayed(const Duration(seconds: 1)); // API 호출 시뮬레이션
     const mockJsonResponse = '''
     [
       {
-        "id": "q-123",
+        "id": "q-mock-123",
         "topicId": "pods",
-        "context": "kubectl config use-context cluster-1",
-        "task": "Create a new Pod named 'nginx-pod' using the 'nginx:1.21' image in the 'dev' namespace.",
-        "solutionCommands": ["kubectl run nginx-pod --image=nginx:1.21 -n dev"],
-        "solutionYaml": "apiVersion: v1\\nkind: Pod\\nmetadata:\\n  name: nginx-pod\\n  namespace: dev\\nspec:\\n  containers:\\n  - name: nginx\\n    image: nginx:1.21",
-        "explanation": "Use 'kubectl run' with the '-n' or '--namespace' flag to specify the namespace."
+        "context": "kubectl config use-context mock-cluster",
+        "task": "[MOCK] Create a new Pod named 'mock-pod' using the 'busybox' image. This is a test question.",
+        "solutionCommands": ["kubectl run mock-pod --image=busybox"],
+        "solutionYaml": "apiVersion: v1\\nkind: Pod\\nmetadata:\\n  name: mock-pod\\nspec:\\n  containers:\\n  - name: busybox\\n    image: busybox",
+        "explanation": "This is a mock question for testing purposes. The `kubectl run` command is used to quickly create a pod."
       },
       {
-        "id": "q-456",
+        "id": "q-mock-456",
         "topicId": "services",
-        "context": "kubectl config use-context cluster-2",
-        "task": "Expose the 'my-deployment' (which has label 'app=web') as a NodePort service on port 80, targeting pod port 8080.",
-        "solutionCommands": ["kubectl expose deployment my-deployment --type=NodePort --port=80 --target-port=8080"],
+        "context": "kubectl config use-context mock-cluster",
+        "task": "[MOCK] Expose the deployment 'mock-deploy' as a NodePort service on port 80.",
+        "solutionCommands": ["kubectl expose deployment mock-deploy --type=NodePort --port=80"],
         "solutionYaml": "apiVersion: v1\\nkind: Service\\n...",
-        "explanation": "Use 'kubectl expose' to quickly create a service. 'port' is the service port, 'target-port' is the container port."
+        "explanation": "This is another mock question. Use `kubectl expose` to create a service from a deployment."
       }
     ]
     ''';
-    
-    // 4. JSON 파싱
     final List<dynamic> jsonList = jsonDecode(mockJsonResponse);
-    final questions = jsonList.map((json) => CkaQuestion.fromJson(json)).toList();
-    
-    // 설정에서 요청한 만큼만 반환 (시뮬레이션이므로 2개만 반환됨)
-    return questions.take(settings.questionCount).toList();
+    return jsonList.map((json) => CkaQuestion.fromJson(json)).take(settings.questionCount).toList();
   }
 }
 
-// --- Provider 정의 (변경 없음) ---
-final ckaRepositoryProvider = Provider<MockCkaRepository>((ref) {
-  return MockCkaRepository();
+// --- Provider 정의 (MockCkaRepository -> CkaRepository) ---
+final ckaRepositoryProvider = Provider<CkaRepository>((ref) {
+  return CkaRepository();
 });
 
 final overallProgressProvider = FutureProvider<OverallProgress>((ref) {

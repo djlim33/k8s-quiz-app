@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // 1. Riverpod import
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'screens/main_screen.dart';
 import 'screens/setup_screen.dart';
 import 'screens/quiz_screen.dart';
 import 'screens/result_screen.dart';
 
-void main() {
+void main() async {
+  // main 함수에서 비동기 작업을 수행하기 위해 필요
+  WidgetsFlutterBinding.ensureInitialized();
+  // .env 파일 로드
+  await dotenv.load(fileName: ".env");
   // 2. ProviderScope로 앱을 감싸기
   runApp(const ProviderScope(child: CkaMasterApp()));
 }
