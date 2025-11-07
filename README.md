@@ -25,6 +25,7 @@ CKA Master는 CKA(Certified Kubernetes Administrator) 자격증 시험을 준비
 ---
 
 ### 2. Features
+ㄹㄹ
 
 #### 2.1. 메인 화면 (MainScreen)
 *   **전체 학습 진행도 표시**:
