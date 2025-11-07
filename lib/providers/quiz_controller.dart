@@ -28,14 +28,13 @@ class QuizController extends StateNotifier<AsyncValue<QuizSession?>> {
   }
 
   // 2. 다음 문제로 (QuizScreen에서 호출)
-  void nextQuestion() {
+  void nextQuestion(void Function(QuizSession) onQuizFinished) {
     state.whenData((session) {
       if (session != null && session.currentIndex < session.questions.length - 1) {
-        state = AsyncData(session.copyWith(
-          currentIndex: session.currentIndex + 1,
-        ));
+        state = AsyncData(session.copyWith(currentIndex: session.currentIndex + 1));
       } else {
-        // TODO: 퀴즈 종료 로직 (결과 화면으로 이동)
+        // 퀴즈 종료: 콜백을 호출하여 결과 화면으로 네비게이션
+        onQuizFinished(session!);
       }
     });
   }

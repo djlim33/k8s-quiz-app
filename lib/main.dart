@@ -46,8 +46,10 @@ class CkaMasterApp extends StatelessWidget {
       routes: {
         '/': (context) => const MainScreen(),
         '/setup': (context) => const SetupScreen(),
-        '/quiz': (context) => const QuizScreen(),
-        '/result': (context) => const ResultScreen(),
+        '/quiz': (context) => const QuizScreen(), 
+        // ResultScreen은 QuizScreen에서 직접 arguments와 함께 호출되므로
+        // 초기 routes 맵에서 제거합니다.
+        // '/result': (context) => const ResultScreen(),
       },
     );
   }
