@@ -6,13 +6,13 @@
 
 ## 📸 Screenshots
 
-*(프로젝트 루트에 `docs` 폴더를 생성하고, 그 안에 실제 앱 스크린샷을 추가한 후 아래 경로를 수정하세요.)*
+
 
 | Main Screen | Quiz Setup | Quiz Screen |
 | :---: | :---: | :---: |
-| <img src="docs/screenshot_main.png" width="250"/> | <img src="docs/screenshot_setup.png" width="250"/> | <img src="docs/screenshot_quiz.png" width="250"/> |
+| <img src="docs/screenshot_main.png" width="250"/> | <img src="docs/4.png" width="250"/> | <img src="docs/5.png" width="250"/> |
 | **Result Screen** | **Concept List** | **Concept Detail** |
-| <img src="docs/screenshot_result.png" width="250"/> | <img src="docs/screenshot_concept_list.png" width="250"/> | <img src="docs/screenshot_concept_detail.png" width="250"/> |
+| <img src="docs/6.png" width="250"/> | <img src="docs/3.png" width="250"/> | <img src="docs/screenshot_2.png" width="250"/> |
 
 ## ✨ 주요 기능 (Features)
 
