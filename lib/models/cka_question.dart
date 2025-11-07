@@ -3,11 +3,13 @@ class QuizSetupSettings {
   final Set<String> topicIds; // 'pods', 'services' 등
   final int questionCount;
   final String quizType; // 'random', 'cmd', 'yaml'
+  final int timeLimitInMinutes; // [신규] 필드 선언
 
   QuizSetupSettings({
-    required this.topicIds,
-    required this.questionCount,
-    required this.quizType,
+    this.topicIds = const {},
+    this.questionCount = 10,
+    this.quizType = 'random',
+    this.timeLimitInMinutes = 30, // 기본값 30분
   });
 
   // 설정값 복사를 위한 helper
@@ -15,11 +17,13 @@ class QuizSetupSettings {
     Set<String>? topicIds,
     int? questionCount,
     String? quizType,
+    int? timeLimitInMinutes,
   }) {
     return QuizSetupSettings(
       topicIds: topicIds ?? this.topicIds,
       questionCount: questionCount ?? this.questionCount,
       quizType: quizType ?? this.quizType,
+      timeLimitInMinutes: timeLimitInMinutes ?? this.timeLimitInMinutes, // [수정]
     );
   }
 }
@@ -85,23 +89,27 @@ class QuizSession {
   final List<CkaQuestion> questions;
   final int currentIndex;
   final Map<String, String> userAnswers; // <QuestionID, UserAnswer>
+  final DateTime endTime; // [신규] 필드 선언
 
   QuizSession({
     required this.id,
     required this.questions,
     this.currentIndex = 0,
     this.userAnswers = const {},
+    required this.endTime, // [신규] 생성자에 추가
   });
 
   QuizSession copyWith({
     int? currentIndex,
     Map<String, String>? userAnswers,
+    DateTime? endTime,
   }) {
     return QuizSession(
       id: id,
       questions: questions,
       currentIndex: currentIndex ?? this.currentIndex,
       userAnswers: userAnswers ?? this.userAnswers,
+      endTime: endTime ?? this.endTime, // [신규]
     );
   }
 }

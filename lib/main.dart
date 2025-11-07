@@ -5,6 +5,8 @@ import 'screens/main_screen.dart';
 import 'screens/setup_screen.dart';
 import 'screens/quiz_screen.dart';
 import 'screens/result_screen.dart';
+import 'screens/concept_screen.dart'; // 1. 새로운 화면 import
+import 'screens/weekly_concepts_screen.dart';
 
 void main() async {
   // main 함수에서 비동기 작업을 수행하기 위해 필요
@@ -25,13 +27,16 @@ class CkaMasterApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
         useMaterial3: true,
-        brightness: Brightness.dark,
-        cardTheme: CardThemeData( // (이전 오류 수정된 코드)
+        // [수정] 밝은 테마로 변경
+        brightness: Brightness.light, 
+        scaffoldBackgroundColor: const Color(0xFFFDFCF5), // 연한 베이지 배경
+        cardTheme: CardThemeData(
           elevation: 2,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
           margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+          color: const Color(0xFFFAFAFA), // [수정] 카드 배경을 보기 좋은 오프화이트 색상으로 변경
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
@@ -46,10 +51,10 @@ class CkaMasterApp extends StatelessWidget {
       routes: {
         '/': (context) => const MainScreen(),
         '/setup': (context) => const SetupScreen(),
-        '/quiz': (context) => const QuizScreen(), 
-        // ResultScreen은 QuizScreen에서 직접 arguments와 함께 호출되므로
-        // 초기 routes 맵에서 제거합니다.
-        // '/result': (context) => const ResultScreen(),
+        '/quiz': (context) => const QuizScreen(),
+        '/result': (context) => const ResultScreen(),
+        '/concept': (context) => const ConceptScreen(),
+        '/weekly-concepts': (context) => const WeeklyConceptsScreen(), // [수정] const 제거
       },
     );
   }

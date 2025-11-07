@@ -20,6 +20,7 @@ class QuizController extends StateNotifier<AsyncValue<QuizSession?>> {
         questions: questions,
         currentIndex: 0,
         userAnswers: {},
+        endTime: DateTime.now().add(Duration(minutes: settings.timeLimitInMinutes)), // [수정]
       );
       state = AsyncData(session); // 퀴즈 생성 완료
     } catch (e, stack) {
@@ -59,4 +60,20 @@ class QuizController extends StateNotifier<AsyncValue<QuizSession?>> {
 final quizControllerProvider =
     StateNotifierProvider<QuizController, AsyncValue<QuizSession?>>((ref) {
   return QuizController(ref);
+});
+
+// [신규] 남은 시간을 1초마다 알려주는 StreamProvider
+final quizTimerProvider = StreamProvider<Duration>((ref) {
+  // quizControllerProvider의 상태를 감시
+  final quizSession = ref.watch(quizControllerProvider).asData?.value;
+
+  if (quizSession == null) {
+    return Stream.value(Duration.zero); // 퀴즈가 없으면 0초
+  }
+
+  // 1초마다 현재 시간과 종료 시간의 차이를 계산하여 방출
+  return Stream.periodic(const Duration(seconds: 1), (computationCount) {
+    final remaining = quizSession.endTime.difference(DateTime.now());
+    return remaining.isNegative ? Duration.zero : remaining;
+  });
 });

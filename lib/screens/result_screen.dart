@@ -65,6 +65,7 @@ class ResultScreen extends ConsumerWidget {
   // 전체 결과 요약 카드
   Widget _buildSummaryCard(int score, int correctCount, int totalQuestions) {
     return Card(
+      color: const Color(0xFF282C34), // 어두운 코드 블록 배경색
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -90,12 +91,42 @@ class ResultScreen extends ConsumerWidget {
   }) {
     final theme = Theme.of(context);
     return Card(
-      color: isCorrect ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
-      margin: const EdgeInsets.symmetric(vertical: 8.0),
-      child: ExpansionTile(
-        leading: Icon(
-          isCorrect ? Icons.check_circle : Icons.cancel,
-          color: isCorrect ? Colors.green : Colors.red,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              '💡 핵심 해설 및 개념',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              "Pod는 쿠버네티스에서 가장 작은 배포 단위입니다. `kubectl run` 명령은...",
+              style: TextStyle(fontSize: 16, height: 1.5),
+            ),
+            const SizedBox(height: 15),
+            const Text(
+              '관련 CKA 범위:',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const Text('📦 Workloads (18%)'),
+            const SizedBox(height: 15),
+            const Text(
+              '유용한 팁 (Dry Run):',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+              color: const Color(0xFF282C34),
+              width: double.infinity,
+              margin: const EdgeInsets.only(top: 5),
+              child: Text(
+                'kubectl run ... --dry-run=client -o yaml > pod.yaml',
+                style: TextStyle(color: Colors.white, fontFamily: 'Courier'),
+              ),
+            ),
+          ],
         ),
         title: Text('문제 $index: ${isCorrect ? "정답" : "오답"}', style: const TextStyle(fontWeight: FontWeight.bold)),
         subtitle: Text(question.task_ko, overflow: TextOverflow.ellipsis),

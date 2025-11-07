@@ -188,6 +188,85 @@ class CkaRepository {
     final List<dynamic> jsonList = jsonDecode(mockJsonResponse);
     return jsonList.map((json) => CkaQuestion.fromJson(json)).take(settings.questionCount).toList();
   }
+
+  // [수정] ConceptScreen에 표시할 특정 '상위' 토픽에 속한 '여러' 개념 데이터
+  Future<List<Concept>> fetchConceptsByParentTopicId(String parentTopicId) async {
+    await Future.delayed(const Duration(milliseconds: 500));
+    // parentTopicId에 따라 다른 데이터를 반환합니다.
+    // 여기서는 'workloads'에 대한 예시 데이터만 구현합니다.
+    if (parentTopicId == 'workloads') {
+      return [
+        Concept(
+          topicId: 'pods',
+          topicName: 'Pod의 이해',
+          description: 'Pod는 쿠버네티스에서 생성하고 관리할 수 있는 배포 가능한 가장 작은 컴퓨팅 단위입니다. 하나 이상의 컨테이너 그룹을 나타냅니다.',
+          commandExample: '# nginx 이미지를 사용하는 \'my-pod\' Pod 생성\n'
+              'kubectl run my-pod --image=nginx',
+          yamlExample: 'apiVersion: v1\n'
+              'kind: Pod\n'
+              'metadata:\n'
+              '  name: my-pod\n'
+              'spec:\n'
+              '  containers:\n'
+              '  - name: nginx-container\n'
+              '    image: nginx:latest',
+        ),
+        Concept(
+          topicId: 'deployments',
+          topicName: 'Deployment의 역할',
+          description: 'Deployment는 Pod와 ReplicaSet에 대한 선언적 업데이트를 제공합니다. Deployment를 통해 Pod의 복제본 수를 관리하고, 롤링 업데이트 및 롤백을 수행할 수 있습니다.',
+          commandExample: '# nginx Deployment 생성 (3개의 복제본)\n'
+              'kubectl create deployment nginx-deployment --image=nginx --replicas=3',
+          yamlExample: 'apiVersion: apps/v1\n'
+              'kind: Deployment\n'
+              'metadata:\n'
+              '  name: nginx-deployment\n'
+              '# ... (이하 생략)',
+        ),
+      ];
+    }
+    // 'workloads'가 아닌 다른 토픽은 빈 리스트 반환
+    return [];
+  }
+
+  // [수정] 메인 화면에 표시할 '주차별' 기본 개념 목록
+  Future<List<WeeklyConceptSummary>> getWeeklyConcepts() async {
+    await Future.delayed(const Duration(milliseconds: 350));
+    return [
+      WeeklyConceptSummary(
+        id: 'week1',
+        title: 'Week 1',
+        description: 'Pod, Service 등 핵심 오브젝트를 학습합니다.',
+      ),
+      WeeklyConceptSummary(
+        id: 'week2',
+        title: 'Week 2',
+        description: 'Deployment, Ingress 등 컨트롤러를 학습합니다.',
+      ),
+    ];
+  }
+
+  // [신규] 특정 주차에 해당하는 개념 목록
+  Future<List<BasicConceptSummary>> getConceptsForWeek(String weekId) async {
+    await Future.delayed(const Duration(milliseconds: 200));
+    // weekId에 따라 다른 데이터를 반환합니다.
+    if (weekId == 'week1') {
+      return [
+        BasicConceptSummary(
+          id: 'pods',
+          title: 'Pod란 무엇인가?',
+          description: '쿠버네티스 배포의 가장 작은 단위입니다.',
+        ),
+        BasicConceptSummary(
+          id: 'services',
+          title: 'Service의 역할',
+          description: 'Pod 집합에 접근할 수 있는 안정적인 엔드포인트를 제공합니다.',
+        ),
+      ];
+    }
+    // 다른 주차에 대한 데이터 (현재는 비어 있음)
+    return [];
+  }
 }
 
 // --- Provider 정의 (MockCkaRepository -> CkaRepository) ---
@@ -213,4 +292,15 @@ final recentExamsProvider = FutureProvider<List<RecentExamSummary>>((ref) {
 // SetupScreen에 표시할 토픽 목록 Provider
 final availableTopicsProvider = FutureProvider<List<CkaTopic>>((ref) {
   return ref.watch(ckaRepositoryProvider).getAvailableTopics();
+});
+
+// [수정] 메인 화면에 표시할 '주차별' 기본 개념 목록 Provider
+final weeklyConceptsProvider = FutureProvider<List<WeeklyConceptSummary>>((ref) {
+  return ref.watch(ckaRepositoryProvider).getWeeklyConcepts();
+});
+
+// [신규] 특정 주차의 개념 목록을 가져오는 Provider
+final conceptsForWeekProvider =
+    FutureProvider.family<List<BasicConceptSummary>, String>((ref, weekId) {
+  return ref.watch(ckaRepositoryProvider).getConceptsForWeek(weekId);
 });

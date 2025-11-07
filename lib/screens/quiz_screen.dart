@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'dart:async'; // [신규]
 import '../models/cka_question.dart';
 import '../providers/quiz_controller.dart';
 import 'result_screen.dart';
@@ -38,15 +39,33 @@ class QuizScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('문제 ${session.currentIndex + 1}/${session.questions.length}'),
-        actions: const [
-          Center(
-            child: Padding(
-              padding: EdgeInsets.only(right: 16.0),
-              child: Text(
-                '남은 시간: (TODO)', // TODO: 타이머
-                style: TextStyle(fontSize: 16),
-              ),
-            ),
+        actions: [
+          // [수정] 타이머 UI
+          Consumer(
+            builder: (context, ref, child) {
+              // 타이머 Provider 구독
+              final timerAsync = ref.watch(quizTimerProvider);
+
+              // 시간이 다 되면 퀴즈 종료
+              ref.listen<AsyncValue<Duration>>(quizTimerProvider, (previous, next) {
+                if (next.value?.inSeconds == 0) {
+                  ref.read(quizControllerProvider.notifier).endQuiz();
+                  if (ModalRoute.of(context)?.isCurrent ?? false) {
+                    Navigator.popAndPushNamed(context, '/result');
+                  }
+                }
+              });
+
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 16.0),
+                  child: Text(
+                    '남은 시간: ${timerAsync.when(data: (d) => _formatDuration(d), error: (e,s) => '오류', loading: () => '...')}',
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -192,5 +211,13 @@ class QuizScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  // Duration을 MM:SS 형태로 포맷하는 헬퍼 함수
+  String _formatDuration(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    final minutes = twoDigits(duration.inMinutes.remainder(60));
+    final seconds = twoDigits(duration.inSeconds.remainder(60));
+    return '$minutes:$seconds';
   }
 }

@@ -131,6 +131,24 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
           const SizedBox(height: 20),
 
           const Text(
+            '시간 제한',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 10),
+          SegmentedButton<int>(
+            segments: const [
+              ButtonSegment(value: 30, label: Text('30분')),
+              ButtonSegment(value: 60, label: Text('60분')),
+              ButtonSegment(value: 120, label: Text('120분')),
+            ],
+            selected: {setupState.timeLimitInMinutes},
+            onSelectionChanged: (val) {
+              ref.read(setupProvider.notifier).setTimeLimit(val.first);
+            },
+          ),
+          const SizedBox(height: 20),
+
+          const Text(
             '문제 유형 (CKA 핵심)',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),

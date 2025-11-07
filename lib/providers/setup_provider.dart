@@ -8,6 +8,7 @@ class SetupNotifier extends StateNotifier<QuizSetupSettings> {
           topicIds: {'pods'}, // 기본 선택
           questionCount: 10,
           quizType: 'random',
+          timeLimitInMinutes: 30,
         ));
 
   void toggleTopic(String topicId) {
@@ -26,6 +27,10 @@ class SetupNotifier extends StateNotifier<QuizSetupSettings> {
 
   void setQuizType(String type) {
     state = state.copyWith(quizType: type);
+  }
+
+  void setTimeLimit(int minutes) {
+    state = state.copyWith(timeLimitInMinutes: minutes);
   }
 }
 
