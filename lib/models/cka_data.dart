@@ -38,15 +38,26 @@ class RecentExamSummary {
   });
 }
 
-// TODO: 2단계에서 사용할 문제/해설 모델들
-// class CkaQuestion { ... }
-// class CkaTopic { ... }
+// --- [신규] 개념 학습 관련 모델 ---
 
-// 5. 메인 화면: 쿠버네티스 기본 개념
+// 4. 메인 화면: 주차별 기본 개념 요약
+class WeeklyConceptSummary {
+  final String id; // 예: "week1"
+  final String title; // 예: "Week 1"
+  final String description; // 예: "Pod, Service 등 핵심 오브젝트를 학습합니다."
+
+  WeeklyConceptSummary({
+    required this.id,
+    required this.title,
+    required this.description,
+  });
+}
+
+// 5. 주차별 화면: 기본 개념 목록 요약
 class BasicConceptSummary {
-  final String id;
-  final String title;
-  final String description;
+  final String id; // 예: "pods"
+  final String title; // 예: "Pod란 무엇인가?"
+  final String description; // 예: "쿠버네티스 배포의 가장 작은 단위입니다."
 
   BasicConceptSummary({
     required this.id,
@@ -55,7 +66,7 @@ class BasicConceptSummary {
   });
 }
 
-// 4. 개념 학습 화면: 토픽별 상세 개념
+// 6. 상세 개념 화면: 상세 설명 데이터
 class Concept {
   final String topicId;
   final String topicName;
@@ -63,24 +74,6 @@ class Concept {
   final String commandExample;
   final String yamlExample;
 
-  Concept({
-    required this.topicId,
-    required this.topicName,
-    required this.description,
-    required this.commandExample,
-    required this.yamlExample,
-  });
-}
-
-// 6. 메인 화면: 주차별 기본 개념
-class WeeklyConceptSummary {
-  final String id; // 예: 'week1'
-  final String title; // 예: 'Week 1'
-  final String description; // 예: 'Pod, Service의 기본 개념을 학습합니다.'
-
-  WeeklyConceptSummary({
-    required this.id,
-    required this.title,
-    required this.description,
-  });
+  Concept(
+      {required this.topicId, required this.topicName, required this.description, required this.commandExample, required this.yamlExample});
 }

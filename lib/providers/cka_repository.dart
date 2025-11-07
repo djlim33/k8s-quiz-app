@@ -189,44 +189,184 @@ class CkaRepository {
     return jsonList.map((json) => CkaQuestion.fromJson(json)).take(settings.questionCount).toList();
   }
 
-  // [수정] ConceptScreen에 표시할 특정 '상위' 토픽에 속한 '여러' 개념 데이터
-  Future<List<Concept>> fetchConceptsByParentTopicId(String parentTopicId) async {
+  // [수정] 특정 '하위' 토픽 ID에 대한 상세 개념 데이터
+  Future<Concept> fetchConceptById(String topicId) async {
     await Future.delayed(const Duration(milliseconds: 500));
-    // parentTopicId에 따라 다른 데이터를 반환합니다.
-    // 여기서는 'workloads'에 대한 예시 데이터만 구현합니다.
-    if (parentTopicId == 'workloads') {
-      return [
-        Concept(
-          topicId: 'pods',
-          topicName: 'Pod의 이해',
-          description: 'Pod는 쿠버네티스에서 생성하고 관리할 수 있는 배포 가능한 가장 작은 컴퓨팅 단위입니다. 하나 이상의 컨테이너 그룹을 나타냅니다.',
-          commandExample: '# nginx 이미지를 사용하는 \'my-pod\' Pod 생성\n'
-              'kubectl run my-pod --image=nginx',
-          yamlExample: 'apiVersion: v1\n'
-              'kind: Pod\n'
-              'metadata:\n'
-              '  name: my-pod\n'
-              'spec:\n'
-              '  containers:\n'
-              '  - name: nginx-container\n'
-              '    image: nginx:latest',
-        ),
-        Concept(
-          topicId: 'deployments',
-          topicName: 'Deployment의 역할',
-          description: 'Deployment는 Pod와 ReplicaSet에 대한 선언적 업데이트를 제공합니다. Deployment를 통해 Pod의 복제본 수를 관리하고, 롤링 업데이트 및 롤백을 수행할 수 있습니다.',
-          commandExample: '# nginx Deployment 생성 (3개의 복제본)\n'
-              'kubectl create deployment nginx-deployment --image=nginx --replicas=3',
-          yamlExample: 'apiVersion: apps/v1\n'
-              'kind: Deployment\n'
-              'metadata:\n'
-              '  name: nginx-deployment\n'
-              '# ... (이하 생략)',
-        ),
-      ];
+    final allConcepts = {
+      'pods': Concept(
+        topicId: 'pods',
+        topicName: 'Pod의 이해',
+        description: 'Pod는 쿠버네티스에서 생성하고 관리할 수 있는 배포 가능한 가장 작은 컴퓨팅 단위입니다. 하나 이상의 컨테이너 그룹을 나타내며, 이 컨테이너들은 스토리지와 네트워크를 공유하고 동일한 노드에서 함께 실행됩니다.\n\n'
+            'CKA 시험의 모든 문제의 기초가 되는 가장 중요한 오브젝트입니다. Pod의 생명주기(Pending, Running, Succeeded, Failed, Unknown)를 이해하고, 상태를 확인하며 문제를 진단하는 능력이 필수적입니다.',
+        commandExample: '# nginx 이미지를 사용하는 \'my-pod\' Pod 생성\n'
+            'kubectl run my-pod --image=nginx\n\n'
+            '# 생성된 Pod 목록 확인\n'
+            'kubectl get pods -o wide\n\n'
+            '# Pod의 상세 정보 확인 (이벤트 확인에 필수)\n'
+            'kubectl describe pod my-pod\n\n'
+            '# Pod의 로그 확인 (-f 플래그로 실시간 로그 추적)\n'
+            'kubectl logs my-pod -f\n\n'
+            '# 실행 중인 Pod의 컨테이너에 접속\n'
+            'kubectl exec -it my-pod -- /bin/sh\n\n'
+            '# Pod 삭제\n'
+            'kubectl delete pod my-pod',
+        yamlExample: 'apiVersion: v1\n'
+            'kind: Pod\n'
+            'metadata:\n'
+            '  name: my-pod\n'
+            '  labels:\n'
+            '    app: my-app\n'
+            'spec:\n'
+            '  containers:\n'
+            '  - name: nginx-container\n'
+            '    image: nginx:latest\n'
+            '    ports:\n'
+            '    - containerPort: 80\n'
+            '  restartPolicy: Always # Always, OnFailure, Never',
+      ),
+      'services': Concept(
+        topicId: 'services',
+        topicName: 'Service의 역할',
+        description: 'Service는 변동성이 큰 Pod의 IP 주소 대신, 안정적인 단일 엔드포인트(IP 주소와 DNS 이름)를 통해 Pod 집합에 접근할 수 있도록 해주는 추상화 계층입니다. Service는 `selector`를 사용하여 어떤 레이블을 가진 Pod들을 그룹으로 묶을지 결정합니다.\n\n'
+            '주요 타입:\n'
+            '- **ClusterIP (기본값)**: 클러스터 내부에서만 접근 가능한 가상 IP를 할당합니다. 다른 서비스와의 통신에 사용됩니다.\n'
+            '- **NodePort**: 모든 노드의 특정 포트를 통해 외부에서 서비스에 접근할 수 있게 합니다. 테스트나 간단한 노출에 유용합니다.\n'
+            '- **LoadBalancer**: 클라우드 제공업체(GCP, AWS 등)의 외부 로드 밸런서를 프로비저닝하여 서비스를 외부에 노출합니다.',
+        commandExample: '# "app=my-app" 레이블을 가진 Deployment를 NodePort 타입으로 노출\n'
+            'kubectl expose deployment my-app-deploy --port=80 --target-port=8080 --type=NodePort\n\n'
+            '# 생성된 Service 목록 확인\n'
+            'kubectl get svc # svc는 services의 단축어\n\n'
+            '# Service의 상세 정보 및 엔드포인트(연결된 Pod IP) 확인\n'
+            'kubectl describe service my-service',
+        yamlExample: 'apiVersion: v1\n'
+            'kind: Service\n'
+            'metadata:\n'
+            '  name: my-service\n'
+            'spec:\n'
+            '  selector:\n'
+            '    app: my-app\n'
+            '  ports:\n'
+            '    - protocol: TCP\n'
+            '      port: 80       # Service 자체의 포트\n'
+            '      targetPort: 8080 # Pod 컨테이너가 리스닝하는 포트\n'
+            '  type: NodePort',
+      ),
+      'namespace': Concept(
+        topicId: 'namespace',
+        topicName: 'Namespace 활용',
+        description: 'Namespace는 단일 물리 클러스터를 여러 가상 클러스터로 분할하는 방법입니다. 이를 통해 여러 팀이나 프로젝트가 리소스를 격리하여 사용할 수 있습니다.\n\n'
+            '주요 사용 목적:\n'
+            '- **이름 범위(Scope)**: 다른 Namespace에 있다면 리소스 이름이 같아도 충돌하지 않습니다.\n'
+            '- **접근 제어**: RBAC(Role-Based Access Control)을 통해 특정 Namespace에 대한 사용자 권한을 제한할 수 있습니다.\n'
+            '- **리소스 할당량**: ResourceQuota를 사용하여 Namespace별로 사용할 수 있는 컴퓨팅 리소스(CPU, Memory)나 오브젝트 수(Pod, Service 개수)를 제한할 수 있습니다.',
+        commandExample: '# "development" Namespace 생성\n'
+            'kubectl create namespace development\n\n'
+            '# "development" Namespace에 Pod 생성\n'
+            'kubectl run my-pod --image=nginx -n development\n\n'
+            '# 특정 Namespace의 Pod 목록 확인\n'
+            'kubectl get pods --namespace development\n\n'
+            '# 현재 컨텍스트의 기본 Namespace를 변경 (매우 유용!)\n'
+            'kubectl config set-context --current --namespace=development',
+        yamlExample: 'apiVersion: v1\n'
+            'kind: Namespace\n'
+            'metadata:\n'
+            '  name: production',
+      ),
+      'deployment': Concept(
+        topicId: 'deployment',
+        topicName: 'Deployment 관리',
+        description: 'Deployment는 Pod와 ReplicaSet에 대한 선언적 업데이트를 제공하는 핵심 컨트롤러입니다. 애플리케이션의 원하는 상태(예: 실행할 Pod의 수, 사용할 컨테이너 이미지)를 정의하면, Deployment 컨트롤러가 현재 상태를 원하는 상태와 일치하도록 변경합니다. 롤링 업데이트, 롤백, 배포 확장/축소 등의 기능은 반드시 숙지해야 합니다.',
+        commandExample: '# 3개의 복제본을 가진 nginx Deployment 생성\n'
+            'kubectl create deployment nginx-deploy --image=nginx --replicas=3\n\n'
+            '# Deployment의 이미지 업데이트 (롤링 업데이트 트리거)\n'
+            'kubectl set image deployment/nginx-deploy nginx=nginx:1.25.0\n\n'
+            '# Deployment 롤백\n'
+            'kubectl rollout undo deployment/nginx-deploy',
+        yamlExample: 'apiVersion: apps/v1\n'
+            'kind: Deployment\n'
+            'metadata:\n'
+            '  name: nginx-deployment\n'
+            'spec:\n'
+            '  replicas: 3\n'
+            '  selector:\n'
+            '    matchLabels:\n'
+            '      app: nginx\n'
+            '  template:\n'
+            '    metadata:\n'
+            '      labels:\n'
+            '        app: nginx\n'
+            '    spec:\n'
+            '      containers:\n'
+            '      - name: nginx\n'
+            '        image: nginx:1.24.0\n'
+            '        ports:\n'
+            '        - containerPort: 80',
+      ),
+      'persistentvolume': Concept(
+        topicId: 'persistentvolume',
+        topicName: 'PersistentVolume (PV)과 PersistentVolumeClaim (PVC)',
+        description: 'PV는 관리자가 프로비저닝한 클러스터의 스토리지 조각으로, Pod의 라이프사이클과 독립적으로 데이터를 영속적으로 저장합니다. PVC는 사용자가 PV에 요청하는 명세입니다. Pod는 PVC를 볼륨으로 마운트하여 사용하며, 쿠버네티스는 PVC의 요구사항(용량, 접근 모드)에 맞는 PV를 찾아 바인딩해줍니다. 이 분리된 구조는 스토리지 관리와 사용을 유연하게 만듭니다.',
+        commandExample: '# PV와 PVC는 보통 YAML 파일로 생성합니다.\n'
+            'kubectl apply -f my-pv.yaml\n'
+            'kubectl apply -f my-pvc.yaml\n\n'
+            '# PV 및 PVC 목록 확인\n'
+            'kubectl get pv\n'
+            'kubectl get pvc',
+        yamlExample: '# PersistentVolume (PV) 예제\n'
+            'apiVersion: v1\n'
+            'kind: PersistentVolume\n'
+            'metadata:\n'
+            '  name: my-pv\n'
+            'spec:\n'
+            '  capacity:\n'
+            '    storage: 5Gi\n'
+            '  accessModes:\n'
+            '    - ReadWriteOnce\n'
+            '  hostPath:\n'
+            '    path: "/mnt/data"\n\n'
+            '---\n'
+            '# PersistentVolumeClaim (PVC) 예제\n'
+            'apiVersion: v1\n'
+            'kind: PersistentVolumeClaim\n'
+            'metadata:\n'
+            '  name: my-pvc\n'
+            'spec:\n'
+            '  accessModes:\n'
+            '    - ReadWriteOnce\n'
+            '  resources:\n'
+            '    requests:\n'
+            '      storage: 2Gi',
+      ),
+      'ingress': Concept(
+        topicId: 'ingress',
+        topicName: 'Ingress 라우팅',
+        description: 'Ingress는 클러스터 외부에서 내부 서비스로의 HTTP 및 HTTPS 경로를 관리하는 API 오브젝트입니다. URL 경로 또는 호스트 이름을 기반으로 트래픽을 다른 서비스로 라우팅하는 규칙을 정의할 수 있습니다. Ingress가 작동하려면 클러스터에 Ingress Controller(예: NGINX Ingress Controller, Traefik)가 먼저 실행되고 있어야 합니다.',
+        commandExample: '# Ingress는 복잡한 규칙을 포함하므로 YAML로 정의하는 것이 일반적입니다.\n'
+            'kubectl apply -f my-ingress.yaml\n\n'
+            '# 생성된 Ingress 확인\n'
+            'kubectl get ingress',
+        yamlExample: 'apiVersion: networking.k8s.io/v1\n'
+            'kind: Ingress\n'
+            'metadata:\n'
+            '  name: my-ingress\n'
+            'spec:\n'
+            '  rules:\n'
+            '  - host: "example.com"\n'
+            '    http:\n'
+            '      paths:\n'
+            '      - path: /app\n'
+            '        pathType: Prefix\n'
+            '        backend:\n'
+            '          service:\n'
+            '            name: my-app-service\n'
+            '            port:\n'
+            '              number: 80',
+      ),
+    };
+    if (allConcepts.containsKey(topicId)) {
+      return allConcepts[topicId]!;
     }
-    // 'workloads'가 아닌 다른 토픽은 빈 리스트 반환
-    return [];
+    throw Exception('Concept not found for id: $topicId');
   }
 
   // [수정] 메인 화면에 표시할 '주차별' 기본 개념 목록
@@ -235,13 +375,28 @@ class CkaRepository {
     return [
       WeeklyConceptSummary(
         id: 'week1',
-        title: 'Week 1',
-        description: 'Pod, Service 등 핵심 오브젝트를 학습합니다.',
+        title: '1주차: 핵심 오브젝트',
+        description: 'Pod, Service, Namespace 등 쿠버네티스의 기본 구성 요소를 학습합니다.',
       ),
       WeeklyConceptSummary(
         id: 'week2',
-        title: 'Week 2',
-        description: 'Deployment, Ingress 등 컨트롤러를 학습합니다.',
+        title: '2주차: 워크로드와 컨트롤러',
+        description: 'Deployment, ReplicaSet, DaemonSet 등 애플리케이션 배포 및 관리를 학습합니다.',
+      ),
+      WeeklyConceptSummary(
+        id: 'week3',
+        title: '3주차: 스토리지와 설정',
+        description: 'PV, PVC, ConfigMap, Secret 등 데이터 영속성과 설정을 관리하는 방법을 학습합니다.',
+      ),
+      WeeklyConceptSummary(
+        id: 'week4',
+        title: '4주차: 네트워킹과 보안',
+        description: 'Ingress, NetworkPolicy, RBAC 등 서비스 노출과 접근 제어를 학습합니다.',
+      ),
+      WeeklyConceptSummary(
+        id: 'week5',
+        title: '5주차: 클러스터 관리와 트러블슈팅',
+        description: '노드 관리, 클러스터 업그레이드, 문제 해결 기법을 학습합니다.',
       ),
     ];
   }
@@ -254,13 +409,50 @@ class CkaRepository {
       return [
         BasicConceptSummary(
           id: 'pods',
-          title: 'Pod란 무엇인가?',
+          title: 'Pod의 이해',
           description: '쿠버네티스 배포의 가장 작은 단위입니다.',
         ),
         BasicConceptSummary(
           id: 'services',
-          title: 'Service의 역할',
+          title: 'Service의 역할과 종류',
           description: 'Pod 집합에 접근할 수 있는 안정적인 엔드포인트를 제공합니다.',
+        ),
+        BasicConceptSummary(
+          id: 'namespace',
+          title: 'Namespace를 이용한 리소스 격리',
+          description: '클러스터 내의 리소스를 논리적으로 그룹화하고 격리합니다.',
+        ),
+      ];
+    } else if (weekId == 'week2') {
+      return [
+        BasicConceptSummary(
+          id: 'deployment',
+          title: 'Deployment를 이용한 배포 관리',
+          description: '애플리케이션의 롤링 업데이트와 롤백을 관리합니다.',
+        ),
+      ];
+    } else if (weekId == 'week3') {
+      return [
+        BasicConceptSummary(
+          id: 'persistentvolume',
+          title: 'PersistentVolume & PersistentVolumeClaim',
+          description: 'Pod의 생명주기와 무관하게 데이터를 영속적으로 저장합니다.',
+        ),
+      ];
+    } else if (weekId == 'week4') {
+      return [
+        BasicConceptSummary(
+          id: 'ingress',
+          title: 'Ingress를 이용한 외부 트래픽 라우팅',
+          description: 'HTTP/HTTPS 트래픽을 클러스터 내부 서비스로 연결합니다.',
+        ),
+      ];
+    } else if (weekId == 'week5') {
+      return [
+        BasicConceptSummary(
+          id: 'troubleshooting',
+          title: '기본 트러블슈팅',
+          description: 'logs, describe, exec 명령어를 사용한 문제 해결 방법을 학습합니다.',
         ),
       ];
     }
@@ -292,6 +484,12 @@ final recentExamsProvider = FutureProvider<List<RecentExamSummary>>((ref) {
 // SetupScreen에 표시할 토픽 목록 Provider
 final availableTopicsProvider = FutureProvider<List<CkaTopic>>((ref) {
   return ref.watch(ckaRepositoryProvider).getAvailableTopics();
+});
+
+// [신규] 특정 개념의 상세 정보를 가져오는 Provider
+final conceptDetailProvider =
+    FutureProvider.family<Concept, String>((ref, topicId) {
+  return ref.watch(ckaRepositoryProvider).fetchConceptById(topicId);
 });
 
 // [수정] 메인 화면에 표시할 '주차별' 기본 개념 목록 Provider

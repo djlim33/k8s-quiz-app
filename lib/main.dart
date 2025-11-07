@@ -4,9 +4,9 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'screens/main_screen.dart';
 import 'screens/setup_screen.dart';
 import 'screens/quiz_screen.dart';
-import 'screens/result_screen.dart';
-import 'screens/concept_screen.dart'; // 1. 새로운 화면 import
-import 'screens/weekly_concepts_screen.dart';
+// import 'screens/result_screen.dart'; // 동적 라우팅으로 변경되어 직접 import 불필요
+import 'screens/concept_list_screen.dart';
+import 'screens/concept_screen.dart';
 
 void main() async {
   // main 함수에서 비동기 작업을 수행하기 위해 필요
@@ -52,9 +52,9 @@ class CkaMasterApp extends StatelessWidget {
         '/': (context) => const MainScreen(),
         '/setup': (context) => const SetupScreen(),
         '/quiz': (context) => const QuizScreen(),
-        '/result': (context) => const ResultScreen(),
+        // '/result': (context) => const ResultScreen(), // 동적 라우팅으로 변경됨
+        '/concept-list': (context) => const ConceptListScreen(),
         '/concept': (context) => const ConceptScreen(),
-        '/weekly-concepts': (context) => const WeeklyConceptsScreen(), // [수정] const 제거
       },
     );
   }

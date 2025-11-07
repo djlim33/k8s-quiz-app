@@ -180,7 +180,7 @@ class QuizScreen extends ConsumerWidget {
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => ResultScreen(),
+                      builder: (context) => const ResultScreen(),
                       settings: RouteSettings(arguments: finishedSession),
                     ),
                   );

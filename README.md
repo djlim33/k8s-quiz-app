@@ -1,114 +1,101 @@
-### CKA Master: Product Requirements Document (PRD)
+# 🇰🇷 CKA Master: 당신의 쿠버네티스 자격증 합격을 위한 AI 러닝메이트
+
+**CKA Master**는 Flutter와 Google Gemini API를 기반으로 제작된 모바일 애플리케이션으로, Certified Kubernetes Administrator (CKA) 자격증 시험을 준비하는 학습자들에게 실제 시험과 가장 유사한 학습 경험을 제공하는 것을 목표로 합니다.
+
+단순한 문제 풀이를 넘어, AI가 생성하는 동적 퀴즈와 체계적인 개념 학습 콘텐츠를 통해 사용자가 쿠버네티스에 대한 깊이 있는 이해를 갖도록 돕습니다.
+
+## 📸 Screenshots
+
+*(프로젝트 루트에 `docs` 폴더를 생성하고, 그 안에 실제 앱 스크린샷을 추가한 후 아래 경로를 수정하세요.)*
+
+| Main Screen | Quiz Setup | Quiz Screen |
+| :---: | :---: | :---: |
+| <img src="docs/screenshot_main.png" width="250"/> | <img src="docs/screenshot_setup.png" width="250"/> | <img src="docs/screenshot_quiz.png" width="250"/> |
+| **Result Screen** | **Concept List** | **Concept Detail** |
+| <img src="docs/screenshot_result.png" width="250"/> | <img src="docs/screenshot_concept_list.png" width="250"/> | <img src="docs/screenshot_concept_detail.png" width="250"/> |
+
+## ✨ 주요 기능 (Features)
+
+*   **🤖 AI 기반 동적 퀴즈 생성 (Dynamic Quiz Generation)**
+    *   Google의 최신 AI 모델인 **Gemini API**를 활용하여 매번 새로운 CKA 실기 문제를 실시간으로 생성합니다.
+    *   정형화된 문제 은행 방식에서 벗어나, 사용자가 선택한 토픽에 맞춰 무한에 가까운 문제 조합을 경험할 수 있습니다.
+
+*   **📚 체계적인 개념 학습 (In-depth Concept Study)**
+    *   CKA 시험 범위를 기반으로 설계된 5주 완성 커리큘럼을 제공합니다.
+    *   Pod, Service와 같은 핵심 오브젝트부터 스토리지, 네트워킹, 트러블슈팅까지 각 주제에 대한 상세한 설명과 필수 명령어, YAML 예제를 포함합니다.
+
+*   **💻 실전과 같은 가상 터미널 (Mock Terminal Interface)**
+    *   실제 CKA 시험 환경과 유사한 가상 터미널 환경에서 `kubectl` 명령어를 직접 입력하며 문제를 해결합니다.
+    *   이를 통해 시험장에서의 긴장감을 줄이고 명령어 사용에 대한 근육 기억(muscle memory)을 형성할 수 있습니다.
+
+*   **📊 자동 채점 및 상세 피드백 (Automated Scoring & Feedback)**
+    *   퀴즈 종료 즉시 자동 채점 결과를 제공하며, 각 문제에 대한 정답/오답 여부와 함께 상세한 해설을 확인할 수 있습니다.
+    *   모범 답안(명령어, YAML)과 핵심 개념 해설을 통해 틀린 문제를 완벽하게 이해하고 넘어갈 수 있도록 돕습니다.
+
+*   **🇰🇷 한/영 동시 지원 (Bilingual Support)**
+    *   모든 문제 지문과 해설은 한국어와 영어가 함께 제공되어, 명확한 의미 파악과 전문 용어 학습에 효과적입니다.
+
+## 🛠️ 기술 스택 및 아키텍처 (Tech Stack & Architecture)
+
+*   **Framework**: `Flutter` - 크로스플랫폼 개발을 위한 선택
+*   **State Management**: `Riverpod` - 컴파일 타임에 안전하고 유연하며 테스트 용이성이 높은 상태 관리 라이브러리
+*   **AI Model**: `Google Gemini API` (`google_generative_ai`) - 동적이고 지능적인 문제 생성을 위한 핵심 엔진
+*   **API Key Management**: `flutter_dotenv` - 민감한 API 키를 코드와 분리하여 안전하게 관리
+*   **Architecture**: `Repository Pattern` - 데이터 소스(AI, Mock Data)와 UI 로직을 분리하여 코드의 확장성과 유지보수성을 향상
+
+## 🚀 시작하기 (Getting Started)
+
+로컬 환경에서 프로젝트를 실행하고 테스트하기 위한 안내입니다.
+
+### 사전 요구사항
+
+*   Flutter SDK (v3.x.x 이상)
+*   VS Code 또는 Android Studio와 같은 코드 에디터
+*   Google Gemini API 키 (Google AI Studio에서 발급 가능)
+
+### 설치 및 실행
+
+1.  **리포지토리 클론:**
+    ```bash
+    git clone https://github.com/djlim33/k8s-quiz-app.git
+    cd k8s-quiz-app
+    ```
+
+2.  **`.env` 파일 생성:**
+    프로젝트 루트 디렉토리에 `.env` 파일을 생성하고, 발급받은 Gemini API 키를 입력합니다.
+
+    ```
+    GEMINI_API_KEY=YOUR_GEMINI_API_KEY_HERE
+    APP_MODE=live # Mock 데이터로 테스트하려면 'mock'으로 변경
+    ```
+
+3.  **의존성 패키지 설치:**
+    ```bash
+    flutter pub get
+    ```
+
+4.  **애플리케이션 실행:**
+    ```bash
+    flutter run
+    ```
+
+## 📂 프로젝트 구조 (Project Structure)
+
+```
+lib/
+├── models/         # Data models (CkaQuestion, Concept, etc.)
+├── providers/      # Riverpod providers (CkaRepository, QuizController, etc.)
+├── screens/        # UI screens (MainScreen, QuizScreen, etc.)
+└── main.dart       # App entry point and routing
+```
+
+## 🤝 Contributing
+
+Contributions, issues, and feature requests are welcome!
+Feel free to check the issues page.
+
+## 📜 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
 
 ---
-
-### 1. Introduction
-
-#### 1.1. Document Purpose
-이 문서는 CKA Master 모바일 애플리케이션의 제품 요구사항을 정의합니다. 애플리케이션의 목표, 기능, 사용자 경험 및 기술적 고려사항을 명확히 하여 개발 팀이 제품을 효과적으로 구축하고 이해할 수 있도록 돕습니다.
-
-#### 1.2. Product Overview
-CKA Master는 CKA(Certified Kubernetes Administrator) 자격증 시험을 준비하는 학습자를 위한 모바일 학습 및 모의고사 애플리케이션입니다. 사용자는 다양한 CKA 토픽을 선택하고, 문제 수와 유형을 설정하여 맞춤형 퀴즈를 생성할 수 있습니다. 퀴즈는 실제 시험 환경과 유사한 가상 터미널 인터페이스를 제공하며, 문제 풀이 후 상세한 해설과 모범 답안을 통해 학습 효과를 극대화합니다. Firebase Firestore를 백엔드로 사용하여 문제 데이터와 사용자 학습 진행도를 관리합니다.
-CKA Master는 CKA(Certified Kubernetes Administrator) 자격증 시험을 준비하는 학습자를 위한 모바일 학습 및 모의고사 애플리케이션입니다. 사용자는 다양한 CKA 토픽을 선택하고, 문제 수와 유형을 설정하여 맞춤형 퀴즈를 생성할 수 있습니다. 퀴즈는 실제 시험 환경과 유사한 가상 터미널 인터페이스를 제공하며, 문제 풀이 후 상세한 해설과 모범 답안을 통해 학습 효과를 극대화합니다. 현재는 앱 내에 포함된 가상 데이터(Mock Data)를 사용하여 모든 기능을 제공합니다.
-
-#### 1.3. Goals
-*   CKA 시험 준비생들이 실제 시험 환경에 익숙해지도록 돕습니다.
-*   사용자 맞춤형 퀴즈를 제공하여 효율적인 학습을 지원합니다.
-*   상세한 해설과 모범 답안을 통해 학습 이해도를 높입니다.
-*   사용자의 학습 진행 상황을 시각적으로 추적하고 동기를 부여합니다.
-
-#### 1.4. Target Audience
-*   CKA 자격증 취득을 목표로 하는 IT 전문가 및 학생.
-*   Kubernetes 운영 및 관리에 대한 실무 지식을 향상시키고자 하는 개발자 및 엔지니어.
-*   기존 CKA 지식을 복습하고 실전 감각을 유지하려는 사용자.
-
----
-
-### 2. Features
-ㄹㄹ
-
-#### 2.1. 메인 화면 (MainScreen)
-*   **전체 학습 진행도 표시**:
-    *   사용자의 전체 학습 진행률 (progressPercent) 및 정답률 (accuracyPercent)을 시각적으로 표시합니다.
-    *   `OverallProgress` 모델 사용.
-*   **주제별 심화 학습 요약**:
-    *   "Workloads", "Services" 등 주요 CKA 토픽별 학습 진행률을 카드 형태로 가로 스크롤하여 표시합니다.
-    *   각 토픽은 아이콘, 이름, 진행률을 포함합니다.
-    *   `TopicSummary` 모델 사용.
-*   **최근 모의고사 목록**:
-    *   사용자가 최근에 응시했거나 진행 중인 모의고사 목록을 표시합니다.
-    *   각 항목은 시험 제목, 완료 여부, 점수(완료 시), 상태 메시지를 포함합니다.
-    *   완료된 시험은 결과 화면으로, 진행 중인 시험은 퀴즈 화면으로 이동합니다.
-    *   `RecentExamSummary` 모델 사용.
-*   **데이터 새로고침**:
-    *   화면을 아래로 당겨서 모든 학습 데이터를 새로고침할 수 있습니다.
-*   **퀴즈 생성 버튼**:
-    *   Floating Action Button을 통해 퀴즈 설정 화면(`SetupScreen`)으로 이동합니다.
-
-#### 2.2. 퀴즈 설정 화면 (SetupScreen)
-*   **CKA 출제 범위 선택**:
-    *   앱 내에 미리 정의된 CKA 토픽 목록을 표시합니다.
-    *   토픽은 "Workloads & Scheduling", "Services & Networking" 등 부모 토픽으로 그룹화되어 ExpansionTile 형태로 제공됩니다.
-    *   사용자는 체크박스를 통해 학습할 세부 토픽을 다중 선택할 수 있습니다.
-    *   `CkaTopic` 모델 사용.
-*   **문제 수 설정**:
-    *   Segmented Button을 통해 10개, 20개, 30개 중 문제 수를 선택할 수 있습니다.
-*   **문제 유형 설정**:
-    *   Segmented Button을 통해 '전체 랜덤', '기본 명령어(CMD)', 'YAML 생성' 중 퀴즈 유형을 선택할 수 있습니다.
-*   **퀴즈 생성 및 시작**:
-    *   선택된 설정(`QuizSetupSettings`)에 따라 가상으로 문제를 생성합니다. (API 호출 시뮬레이션)
-    *   퀴즈 생성 중에는 로딩 인디케이터를 표시합니다.
-    *   퀴즈 생성 성공 시 `QuizScreen`으로 이동하고, 실패 시 에러 메시지를 스낵바로 표시합니다.
-
-#### 2.3. 퀴즈 화면 (QuizScreen)
-*   **문제 번호 표시**:
-    *   현재 문제 번호와 전체 문제 수를 AppBar에 표시합니다 (예: "문제 1/10").
-*   **타이머 (TODO)**:
-    *   남은 시간을 표시하는 타이머 기능이 추가될 예정입니다.
-*   **문제 지문**:
-    *   문제의 `context` (예: `kubectl config use-context cluster-1`)와 `task` (예: "Create a new Pod named...")를 표시합니다.
-*   **가상 터미널**:
-    *   사용자가 명령어를 입력할 수 있는 `TextField` 기반의 가상 터미널 인터페이스을 제공합니다.
-    *   사용자 입력은 `QuizSession`에 실시간으로 저장됩니다.
-*   **컨트롤 버튼**:
-    *   **"kubectl 치트시트"**: (TODO) 관련 치트시트를 볼 수 있는 기능.
-    *   **"다음 문제로" / "결과 보기"**:
-        *   마지막 문제가 아닐 경우 "다음 문제로" 버튼을 통해 다음 문제로 이동합니다.
-        *   마지막 문제일 경우 "결과 보기" 버튼을 통해 퀴즈를 종료하고 `ResultScreen`으로 이동합니다.
-
-#### 2.4. 퀴즈 결과 화면 (ResultScreen)
-*   **사용자 제출 답안 표시**:
-    *   사용자가 퀴즈 화면에서 입력한 명령어를 표시합니다.
-*   **모범 답안 표시**:
-    *   문제에 대한 모범 답안을 Imperative (명령어) 및 Declarative (YAML) 형식으로 각각 표시합니다.
-*   **핵심 해설 및 개념**:
-    *   문제와 관련된 상세한 해설, 핵심 개념, 관련 CKA 범위, 유용한 팁 (예: `dry-run` 명령어)을 제공합니다.
-*   **퀴즈 세션 초기화**:
-    *   결과 화면으로 이동하면 현재 퀴즈 세션은 초기화됩니다.
-
-#### 2.5. 데이터 관리 (Mock Data)
-*   **데이터 소스**: 모든 데이터(학습 진행도, 토픽, 문제 등)는 `MockCkaRepository` 클래스 내에서 가상으로 생성됩니다.
-*   **네트워크 시뮬레이션**: 실제 API를 호출하는 것처럼 `Future.delayed`를 사용하여 의도적인 지연을 구현했습니다.
-*   **문제 생성 시뮬레이션**: `generateQuiz` 메서드는 실제 Gemini API를 호출하는 대신, 하드코딩된 JSON 응답을 파싱하여 문제를 반환합니다.
-
----
-
-### 3. Technical Considerations
-
-*   **프레임워크**: Flutter
-*   **상태 관리**: Riverpod (`StateNotifierProvider`, `FutureProvider`)
-*   **백엔드**: 없음 (Mock Repository 사용)
-*   **UI/UX**: Material Design 3, 다크 테마
-*   **데이터 모델**: `cka_data.dart`, `cka_question.dart`에 정의된 모델 사용.
-
----
-
-### 4. Future Enhancements
-
-*   **사용자 인증**: Firebase Authentication을 통한 사용자 로그인/회원가입 기능 추가.
-*   **개인별 학습 기록**: 사용자별 퀴즈 기록, 오답 노트, 학습 통계 등 개인화된 데이터 저장 및 분석 기능.
-*   **타이머 기능 구현**: 퀴즈 화면에 실제 시험과 유사한 시간 제한 타이머 구현.
-*   **치트시트 연동**: `kubectl` 치트시트 내용을 앱 내에서 조회할 수 있는 기능 구현.
-*   **Gemini API 연동**: 현재는 시뮬레이션된 응답을 사용하지만, 향후 Gemini API를 직접 호출하여 동적으로 문제를 생성하는 기능 구현.
-*   **오답 노트**: 틀린 문제들을 다시 풀어볼 수 있는 오답 노트 기능.
-*   **결과 분석**: 퀴즈 종료 후 상세한 결과 분석 (정답률, 시간 소요, 약점 토픽 등).
