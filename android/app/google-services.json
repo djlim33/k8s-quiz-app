@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "717131016385",
+    "project_id": "cka-train-1106",
+    "storage_bucket": "cka-train-1106.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:717131016385:android:7a9fa16389d279e6ffcc40",
+        "android_client_info": {
+          "package_name": "com.example.flutter_application_1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAbUc9AILvip4-3XmPgvGRBJ7jMLWwrjBg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
