@@ -18,6 +18,7 @@ class MainScreen extends ConsumerWidget {
     final progressAsync = ref.watch(overallProgressProvider);
     final topicsAsync = ref.watch(topicSummariesProvider);
     final examsAsync = ref.watch(recentExamsProvider);
+    final weeklyConceptsAsync = ref.watch(weeklyConceptsProvider); // [수정] Provider 변경
 
     return Scaffold(
       appBar: AppBar(
@@ -32,6 +33,7 @@ class MainScreen extends ConsumerWidget {
           ref.invalidate(overallProgressProvider);
           ref.invalidate(topicSummariesProvider);
           ref.invalidate(recentExamsProvider);
+          ref.invalidate(weeklyConceptsProvider); // [수정] Provider 새로고침
         },
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(), // 스크롤을 위해
@@ -41,9 +43,24 @@ class MainScreen extends ConsumerWidget {
               // 1. 나의 CKA 합격 현황 카드
               // 5. AsyncValue의 when을 사용하여 로딩/에러/데이터 처리
               progressAsync.when(
-                data: (progress) => _buildProgressCard(context, progress),
-                loading: () => const _LoadingCard(height: 150),
-                error: (err, stack) => _ErrorCard(message: err.toString()),
+                data: (progress) => _buildProgressCard(context, progress), // [수정]
+                loading: () => _LoadingCard(height: 150), // [수정] const 제거
+                error: (err, stack) => _ErrorCard(message: err.toString()), // [수정] const 제거
+              ),
+
+              // [순서 변경] 쿠버네티스 기본 개념 이해
+              const Padding(
+                padding: EdgeInsets.fromLTRB(20, 24, 20, 10),
+                child: Text(
+                  '쿠버네티스 기본 개념 이해',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+              ),
+              weeklyConceptsAsync.when(
+                data: (weeklyConcepts) =>
+                    _buildWeeklyConceptsSection(context, weeklyConcepts),
+                loading: () => _LoadingCard(height: 180), // [수정] const 제거
+                error: (err, stack) => _ErrorCard(message: err.toString()), // [수정] const 제거
               ),
 
               // 2. 주제별 심화 학습 (가로 스크롤)
@@ -55,9 +72,9 @@ class MainScreen extends ConsumerWidget {
                 ),
               ),
               topicsAsync.when(
-                data: (topics) => _buildTopicSection(context, topics),
-                loading: () => const _LoadingCard(height: 120),
-                error: (err, stack) => _ErrorCard(message: err.toString()),
+                data: (topics) => _buildTopicSection(context, topics), // [수정]
+                loading: () => _LoadingCard(height: 120), // [수정] const 제거
+                error: (err, stack) => _ErrorCard(message: err.toString()), // [수정] const 제거
               ),
 
               // 3. 최근 생성한 모의고사 (세로 리스트)
@@ -69,9 +86,9 @@ class MainScreen extends ConsumerWidget {
                 ),
               ),
               examsAsync.when(
-                data: (exams) => _buildRecentExamsSection(context, exams),
-                loading: () => const _LoadingCard(height: 200),
-                error: (err, stack) => _ErrorCard(message: err.toString()),
+                data: (exams) => _buildRecentExamsSection(context, exams), // [수정]
+                loading: () => _LoadingCard(height: 200), // [수정] const 제거
+                error: (err, stack) => _ErrorCard(message: err.toString()), // [수정] const 제거
               ),
             ],
           ),
@@ -113,8 +130,8 @@ class MainScreen extends ConsumerWidget {
               children: [
                 Text('전체 진행도: ${(progress.progressPercent * 100).toInt()}%'), // *데이터 사용*
                 Text(
-                  '정답률: ${(progress.accuracyPercent * 100).toInt()}%', // *데이터 사용*
-                  style: TextStyle(color: Colors.green.shade300),
+                  '정답률: ${(progress.accuracyPercent * 100).toInt()}%', 
+                  style: TextStyle(color: Colors.green.shade600), // [수정] 밝은 테마에 맞는 색상
                 ),
               ],
             ),
@@ -135,35 +152,44 @@ class MainScreen extends ConsumerWidget {
         itemBuilder: (context, index) {
           final topic = topics[index]; // *데이터 사용*
           return _buildTopicCard(
+            context, // context 전달
             topic.icon,
             topic.name,
             topic.progressPercent,
+            topic.id, // topicId 전달
           );
         },
       ),
     );
   }
 
-  // 주제별 카드 위젯 (변경 없음, 데이터는 위에서 주입)
-  Widget _buildTopicCard(String icon, String title, double progress) {
+  // 주제별 카드 위젯 (onTap 추가)
+  Widget _buildTopicCard(BuildContext context, String icon, String title, double progress, String topicId) {
     return SizedBox(
       width: 150,
       child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(icon, style: const TextStyle(fontSize: 24)),
-              const SizedBox(height: 8),
-              Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              LinearProgressIndicator(
-                value: progress,
-                borderRadius: const BorderRadius.all(Radius.circular(3)),
-              ),
-            ],
+        clipBehavior: Clip.antiAlias, // InkWell의 Ripple 효과가 보이도록
+        child: InkWell(
+          onTap: () {
+            // 개념 학습 화면으로 이동
+            Navigator.pushNamed(context, '/concept', arguments: topicId);
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(icon, style: const TextStyle(fontSize: 24)),
+                const SizedBox(height: 8),
+                Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                LinearProgressIndicator(
+                  value: progress,
+                  borderRadius: const BorderRadius.all(Radius.circular(3)),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -178,25 +204,55 @@ class MainScreen extends ConsumerWidget {
       physics: const NeverScrollableScrollPhysics(), // 부모 스크롤 사용
       itemCount: exams.length,
       itemBuilder: (context, index) {
-        final exam = exams[index]; // *데이터 사용*
-        return ListTile(
-          leading: Icon(
-            exam.isCompleted // *데이터 사용*
-                ? Icons.check_circle_outline
-                : Icons.pending_outlined,
-            color: exam.isCompleted ? Colors.green : Colors.yellow,
+        final exam = exams[index];
+        return Card(
+          clipBehavior: Clip.antiAlias,
+          child: ListTile(
+            leading: Icon(
+              exam.isCompleted
+                  ? Icons.check_circle_outline
+                  : Icons.pending_outlined,
+              color: exam.isCompleted
+                  ? Colors.green.shade600
+                  : Colors.orange.shade600,
+            ),
+            title: Text(exam.title),
+            subtitle: Text(exam.status),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () {
+              if (exam.isCompleted) {
+                Navigator.pushNamed(context, '/result', arguments: exam.id);
+              } else {
+                Navigator.pushNamed(context, '/quiz', arguments: exam.id);
+              }
+            },
           ),
-          title: Text(exam.title), // *데이터 사용*
-          subtitle: Text(exam.status), // *데이터 사용*
-          trailing: const Icon(Icons.arrow_forward_ios),
-          onTap: () {
-            // *로직 분기*
-            if (exam.isCompleted) {
-              Navigator.pushNamed(context, '/result', arguments: exam.id);
-            } else {
-              Navigator.pushNamed(context, '/quiz', arguments: exam.id);
-            }
-          },
+        );
+      },
+    );
+  }
+
+  // [수정] 주차별 기본 개념 섹션
+  Widget _buildWeeklyConceptsSection(
+      BuildContext context, List<WeeklyConceptSummary> weeklyConcepts) {
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: weeklyConcepts.length,
+      itemBuilder: (context, index) {
+        final weeklyConcept = weeklyConcepts[index];
+        return Card(
+          clipBehavior: Clip.antiAlias,
+          child: ListTile(
+            leading: const Icon(Icons.school_outlined),
+            title: Text(weeklyConcept.title),
+            subtitle: Text(weeklyConcept.description),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () {
+              Navigator.pushNamed(context, '/weekly-concepts',
+                  arguments: weeklyConcept.id);
+            },
+          ),
         );
       },
     );
@@ -213,9 +269,11 @@ class _LoadingCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       height: height,
-      child: const Card(
+      child: Card( // [수정]
         child: Center(
-          child: CircularProgressIndicator(),
+          child: CircularProgressIndicator(
+            color: Theme.of(context).colorScheme.primary,
+          ),
         ),
       ),
     );
@@ -229,11 +287,12 @@ class _ErrorCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      color: Colors.red.shade900,
+      color: Colors.red.shade100, // [수정]
       child: Center(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: Text('오류가 발생했습니다: $message'),
+          child: Text('오류가 발생했습니다: $message',
+              style: TextStyle(color: Colors.red.shade900)),
         ),
       ),
     );

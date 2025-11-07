@@ -56,7 +56,7 @@ class ResultScreen extends StatelessWidget {
   Widget _buildAnswerCard(BuildContext context,
       {required String title, required String command}) {
     return Card(
-      color: Colors.grey[900], // 터미널과 유사한 배경색
+      color: const Color(0xFF282C34), // 어두운 코드 블록 배경색
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -64,17 +64,17 @@ class ResultScreen extends StatelessWidget {
           children: [
             Text(
               title,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.blueAccent),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF61AFEF)),
             ),
             const SizedBox(height: 10),
             Container(
-              padding: const EdgeInsets.all(10),
-              color: Colors.black,
+              padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+              color: const Color(0xFF21252B), // 내부 배경색
               width: double.infinity,
               child: Text(
                 command,
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: Color(0xFFABB2BF),
                   fontFamily: 'Courier',
                   fontSize: 14,
                 ),
@@ -115,11 +115,11 @@ class ResultScreen extends StatelessWidget {
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             Container(
-              padding: const EdgeInsets.all(10),
-              color: Colors.grey[850],
+              padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+              color: const Color(0xFF282C34),
               width: double.infinity,
               margin: const EdgeInsets.only(top: 5),
-              child: const Text(
+              child: Text(
                 'kubectl run ... --dry-run=client -o yaml > pod.yaml',
                 style: TextStyle(color: Colors.white, fontFamily: 'Courier'),
               ),
