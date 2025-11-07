@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:async'; // [신규]
 import '../models/cka_question.dart';
 import '../providers/quiz_controller.dart';
+import 'result_screen.dart';
 
 // 1. ConsumerWidget으로 변경
 class QuizScreen extends ConsumerWidget {
@@ -102,8 +103,14 @@ class QuizScreen extends ConsumerWidget {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 5),
+            // 한국어 문제
             Text(
-              question.task, // *데이터*
+              question.task_ko,
+              style: const TextStyle(fontSize: 18, height: 1.5),
+            ),
+            // 영어 문제 (참고용)
+            Text(
+              question.task,
               style: const TextStyle(fontSize: 16, height: 1.5),
             ),
           ],
@@ -166,13 +173,19 @@ class QuizScreen extends ConsumerWidget {
           ElevatedButton(
             // 6. 퀴즈 컨트롤러 메서드 호출
             onPressed: () {
-              if (isLastQuestion) {
-                // TODO: 퀴즈 종료 및 결과 화면 이동
-                ref.read(quizControllerProvider.notifier).endQuiz();
-                Navigator.popAndPushNamed(context, '/result'); // (임시)
-              } else {
-                ref.read(quizControllerProvider.notifier).nextQuestion();
-              }
+              ref.read(quizControllerProvider.notifier).nextQuestion(
+                (finishedSession) {
+                  // 이 콜백은 퀴즈 컨트롤러에서 퀴즈가 종료될 때 호출됩니다.
+                  ref.read(quizControllerProvider.notifier).endQuiz();
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ResultScreen(),
+                      settings: RouteSettings(arguments: finishedSession),
+                    ),
+                  );
+                },
+              );
             },
             child: Text(isLastQuestion ? '결과 보기' : '다음 문제로'),
           ),

@@ -48,19 +48,23 @@ class CkaQuestion {
   final String id;
   final String topicId;
   final String context; // 예: "Use context cluster-1"
-  final String task; // 예: "Create a pod named..."
+  final String task; // 예: "Create a pod named..." (영문)
+  final String task_ko; // 예: "이름이 ...인 파드를 생성하세요." (국문)
   final List<String> solutionCommands; // 모범 답안 (명령어)
   final String solutionYaml; // 모범 답안 (YAML)
-  final String explanation; // 해설
+  final String explanation; // 해설 (영문)
+  final String explanation_ko; // 해설 (국문)
 
   CkaQuestion({
     required this.id,
     required this.topicId,
     required this.context,
     required this.task,
+    required this.task_ko,
     required this.solutionCommands,
     required this.solutionYaml,
     required this.explanation,
+    required this.explanation_ko,
   });
 
   // Gemini가 반환할 JSON을 파싱하기 위한 팩토리 생성자
@@ -70,9 +74,11 @@ class CkaQuestion {
       topicId: json['topicId'] as String,
       context: json['context'] as String,
       task: json['task'] as String,
+      task_ko: json['task_ko'] as String,
       solutionCommands: List<String>.from(json['solutionCommands'] as List),
       solutionYaml: json['solutionYaml'] as String,
       explanation: json['explanation'] as String,
+      explanation_ko: json['explanation_ko'] as String,
     );
   }
 }
