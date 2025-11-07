@@ -10,9 +10,9 @@
 
 | Main Screen | Quiz Setup | Quiz Screen |
 | :---: | :---: | :---: |
-| <img src="docs/screenshot_main.png" width="250"/> | <img src="docs/4.png" width="250"/> | <img src="docs/5.png" width="250"/> |
+| <img src="docs/screenshot_main.PNG" width="250"/> | <img src="docs/4.PNG" width="250"/> | <img src="docs/5.PNG" width="250"/> |
 | **Result Screen** | **Concept List** | **Concept Detail** |
-| <img src="docs/6.png" width="250"/> | <img src="docs/3.png" width="250"/> | <img src="docs/screenshot_2.png" width="250"/> |
+| <img src="docs/6.PNG" width="250"/> | <img src="docs/3.PNG" width="250"/> | <img src="docs/screenshot_2.PNG" width="250"/> |
 
 ## ✨ 주요 기능 (Features)
 
